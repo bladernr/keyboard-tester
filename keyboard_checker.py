@@ -496,7 +496,8 @@ class TypingTest(QWidget):
         self.sample_display = QTextEdit()
         self.sample_display.setReadOnly(True)
         self.sample_display.setFont(QFont("Monospace", 11))
-        self.sample_display.setMaximumHeight(150)
+        # Auto-expand to show all text - adjust height based on content
+        self.sample_display.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         layout.addWidget(self.sample_display)
 
         # Typing input area
@@ -520,9 +521,10 @@ class TypingTest(QWidget):
         self.stats_panel = QLabel("")
         self.stats_panel.setFont(QFont("Monospace", 10))
         self.stats_panel.setStyleSheet(
-            "background-color: #f0f0f0; padding: 15px; border-radius: 5px;"
+            "background-color: #f0f0f0; color: #000000; padding: 15px; border-radius: 5px;"
         )
         self.stats_panel.setVisible(False)
+        self.stats_panel.setWordWrap(True)
         layout.addWidget(self.stats_panel)
 
         # Action buttons (hidden initially)
@@ -591,6 +593,11 @@ class TypingTest(QWidget):
         }
         self.sample_display.setPlainText(self.current_sample['text'])
 
+        # Auto-resize sample display to fit all content without scrolling
+        doc = self.sample_display.document()
+        doc_height = doc.size().height()
+        self.sample_display.setFixedHeight(int(doc_height) + 10)  # Add padding
+
         # Reset state
         self.test_active = True
         self.test_start_time = datetime.now()
@@ -640,7 +647,7 @@ class TypingTest(QWidget):
             self.wpm_samples.append(current_wpm)
 
     def handle_typing_input(self):
-        """Handle user typing input with real-time error detection"""
+        """Handle user typing input with word-based error detection"""
         if not self.test_active:
             return
 
@@ -654,32 +661,72 @@ class TypingTest(QWidget):
         self.typing_input.blockSignals(True)  # Prevent recursion
         self.typing_input.clear()
 
-        # Build formatted text
-        for i, char in enumerate(self.typed_text):
-            if i < len(source_text):
-                if char == source_text[i]:
-                    # Correct character - green
+        # Reset errors for this iteration
+        self.errors = []
+
+        # Tokenize source and typed text into words and whitespace
+        # This allows word-by-word comparison without error propagation
+        import re
+
+        # Split into tokens (words/punctuation + spaces)
+        source_tokens = []
+        for match in re.finditer(r'\S+|\s+', source_text):
+            source_tokens.append(match.group())
+
+        typed_tokens = []
+        for match in re.finditer(r'\S+|\s+', self.typed_text):
+            typed_tokens.append((match.group(), match.start(), match.end()))
+
+        # Match typed tokens to source tokens and colorize
+        cursor = self.typing_input.textCursor()
+        typed_char_idx = 0
+
+        for token_idx, (typed_token, typed_start, typed_end) in enumerate(typed_tokens):
+            # Get corresponding source token (if exists)
+            if token_idx >= len(source_tokens):
+                # Typed beyond source - mark as red (error) for tokens close to end,
+                # gray for tokens far beyond
+                # This catches things like typing a space instead of punctuation
+                is_near_end = token_idx < len(source_tokens) + 2
+                for char in typed_token:
                     fmt = QTextCharFormat()
-                    fmt.setForeground(QColor(0, 150, 0))
-                    cursor = self.typing_input.textCursor()
+                    if is_near_end:
+                        fmt.setForeground(QColor(200, 0, 0))
+                        self.errors.append((typed_char_idx, char, ''))
+                    else:
+                        fmt.setForeground(QColor(128, 128, 128))
                     cursor.movePosition(QTextCursor.MoveOperation.End)
                     cursor.insertText(char, fmt)
+                    typed_char_idx += 1
+                continue
+
+            source_token = source_tokens[token_idx]
+
+            # Compare character by character within this token
+            for i, char in enumerate(typed_token):
+                if i < len(source_token):
+                    if char == source_token[i]:
+                        # Correct character - green
+                        fmt = QTextCharFormat()
+                        fmt.setForeground(QColor(0, 150, 0))
+                        cursor.movePosition(QTextCursor.MoveOperation.End)
+                        cursor.insertText(char, fmt)
+                    else:
+                        # Incorrect character - red
+                        fmt = QTextCharFormat()
+                        fmt.setForeground(QColor(200, 0, 0))
+                        cursor.movePosition(QTextCursor.MoveOperation.End)
+                        cursor.insertText(char, fmt)
+                        self.errors.append((typed_char_idx, char, source_token[i]))
                 else:
-                    # Incorrect character - red
+                    # Extra character in this token - red
                     fmt = QTextCharFormat()
                     fmt.setForeground(QColor(200, 0, 0))
-                    cursor = self.typing_input.textCursor()
                     cursor.movePosition(QTextCursor.MoveOperation.End)
                     cursor.insertText(char, fmt)
-                    if i not in [e[0] for e in self.errors]:
-                        self.errors.append((i, char, source_text[i]))
-            else:
-                # Typed beyond sample - gray
-                fmt = QTextCharFormat()
-                fmt.setForeground(QColor(128, 128, 128))
-                cursor = self.typing_input.textCursor()
-                cursor.movePosition(QTextCursor.MoveOperation.End)
-                cursor.insertText(char, fmt)
+                    self.errors.append((typed_char_idx, char, ''))
+
+                typed_char_idx += 1
 
         # Restore cursor position
         cursor = self.typing_input.textCursor()
@@ -729,8 +776,9 @@ class TypingTest(QWidget):
         # WPM calculation (standard: chars/5 / minutes)
         wpm = (total_chars / 5) / (elapsed / 60) if elapsed > 0 else 0
 
-        # Adjusted WPM (account for errors)
-        adjusted_wpm = max(0, wpm - (error_count / (elapsed / 60)))
+        # Adjusted WPM (standard net WPM formula: subtract error penalty from words before dividing by time)
+        # Each error subtracts 1 word (5 characters worth)
+        adjusted_wpm = max(0, ((total_chars / 5) - error_count) / (elapsed / 60)) if elapsed > 0 else 0
 
         # Accuracy
         accuracy = ((total_chars - error_count) / total_chars * 100) if total_chars > 0 else 0
