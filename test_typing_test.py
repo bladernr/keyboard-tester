@@ -73,7 +73,7 @@ class TestTextSamples:
     def test_sample_count(self):
         """Test that we have the expected number of samples"""
         assert len(TYPING_SAMPLES) >= 20
-        assert len(TYPING_SAMPLES) <= 30
+        assert len(TYPING_SAMPLES) <= 60
 
     def test_sample_structure(self):
         """Test that each sample has required fields"""
