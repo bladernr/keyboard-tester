@@ -1,0 +1,11 @@
+keyboard-checker (1.0.0-1) unstable; urgency=medium
+
+  * Initial release
+  * Keyboard testing with detailed key information display
+  * Typing test mode with WPM tracking and statistics
+  * Real-time error detection with color-coded feedback
+  * Performance history tracking (saved to ~/.local/share)
+  * 50 public domain text samples for typing practice
+  * Comprehensive unit test coverage (71 tests)
+
+ -- Jeff Lane <jeffrey.lane@canonical.com>  Wed, 31 Dec 2025 00:20:00 -0500

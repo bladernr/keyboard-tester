@@ -1,0 +1,28 @@
+#!/usr/bin/make -f
+
+%:
+	dh $@
+
+override_dh_auto_clean:
+	# Skip automatic clean
+
+override_dh_auto_configure:
+	# Skip automatic configuration
+
+override_dh_auto_build:
+	# Skip automatic build
+
+override_dh_auto_test:
+	# Skip automatic tests
+
+override_dh_auto_install:
+	# Install Python scripts to /usr/share
+	install -D -m 755 keyboard_checker.py debian/keyboard-checker/usr/share/keyboard-checker/keyboard_checker.py
+	install -D -m 644 text_samples.py debian/keyboard-checker/usr/share/keyboard-checker/text_samples.py
+	# Create wrapper script in /usr/bin
+	mkdir -p debian/keyboard-checker/usr/bin
+	echo '#!/bin/bash' > debian/keyboard-checker/usr/bin/keyboard-checker
+	echo 'cd /usr/share/keyboard-checker && exec python3 keyboard_checker.py "$$@"' >> debian/keyboard-checker/usr/bin/keyboard-checker
+	chmod 755 debian/keyboard-checker/usr/bin/keyboard-checker
+	# Install desktop file
+	install -D -m 644 keyboard-checker.desktop debian/keyboard-checker/usr/share/applications/keyboard-checker.desktop

@@ -1,0 +1,12 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Keyboard Checker
+GenericName=Keyboard Testing Utility
+Comment=Test keyboard keys and typing speed
+Exec=keyboard_checker.py
+Icon=input-keyboard
+Terminal=false
+Categories=Utility;System;
+Keywords=keyboard;test;typing;wpm;speed;
+StartupNotify=true

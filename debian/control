@@ -1,0 +1,26 @@
+Source: keyboard-checker
+Section: utils
+Priority: optional
+Maintainer: Jeff Lane <jeffrey.lane@canonical.com>
+Build-Depends: debhelper-compat (= 13)
+Standards-Version: 4.6.2
+Homepage: https://github.com/bladernr/keyboard-checker
+Vcs-Git: https://github.com/bladernr/keyboard-checker.git
+Rules-Requires-Root: no
+
+Package: keyboard-checker
+Architecture: all
+Depends: ${misc:Depends},
+         python3 (>= 3.8),
+         python3-pyqt6
+Description: Graphical keyboard testing utility with typing test
+ A comprehensive keyboard testing tool for Ubuntu that captures and displays
+ detailed information about keyboard key presses. Features include:
+  * Complete keyboard event capture (keys, modifiers, function keys)
+  * Typing test mode with WPM tracking and statistics
+  * Real-time error detection with color-coded feedback
+  * Performance history tracking and analysis
+  * 50 public domain text samples for typing practice
+ .
+ The application provides detailed keystroke information including key names,
+ Qt key codes, native virtual key codes, and modifier states.

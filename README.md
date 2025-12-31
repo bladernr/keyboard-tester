@@ -143,6 +143,33 @@ python3 -m pytest test_typing_test.py -v
 - UI state management
 - Full typing test workflow integration
 
+## Building Debian Package
+
+To build a Debian package for installation:
+
+```bash
+dpkg-buildpackage -us -uc -b
+```
+
+This will create `keyboard-checker_1.0.0-1_all.deb` in the parent directory.
+
+To install the package:
+
+```bash
+sudo dpkg -i ../keyboard-checker_1.0.0-1_all.deb
+sudo apt-get install -f  # Install any missing dependencies
+```
+
+After installation, you can:
+- Run from command line: `keyboard-checker`
+- Launch from applications menu: "Keyboard Checker"
+
+To uninstall:
+
+```bash
+sudo apt-get remove keyboard-checker
+```
+
 ## License
 
 This program is free software licensed under the GNU General Public License v3.0.

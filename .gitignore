@@ -20,3 +20,17 @@ ENV/
 # OS
 .DS_Store
 Thumbs.db
+
+# Debian packaging
+debian/.debhelper/
+debian/debhelper-build-stamp
+debian/files
+debian/keyboard-checker/
+debian/*.substvars
+debian/*.log
+*.deb
+*.buildinfo
+*.changes
+*.dsc
+*.tar.gz
+*.tar.xz
